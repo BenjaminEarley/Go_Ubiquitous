@@ -132,6 +132,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
         Paint mBackgroundPaint;
         Paint mDatePaint;
+        Paint mHighTempPaint;
+        Paint mLowTempPaint;
         Paint mHourPaint;
         Paint mMinutePaint;
         Paint mAmPmPaint;
@@ -184,6 +186,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(mInteractiveBackgroundColor);
             mDatePaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_date));
+            mHighTempPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_high_temp));
+            mLowTempPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_low_temp));
             mHourPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mMinutePaint = createTextPaint(mInteractiveMinuteDigitsColor);
             mAmPmPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_am_pm));
@@ -333,6 +337,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 boolean antiAlias = !inAmbientMode;
                 mDatePaint.setAntiAlias(antiAlias);
                 mHourPaint.setAntiAlias(antiAlias);
+                mHighTempPaint.setAntiAlias(antiAlias);
+                mLowTempPaint.setAntiAlias(antiAlias);
                 mMinutePaint.setAntiAlias(antiAlias);
                 mAmPmPaint.setAntiAlias(antiAlias);
                 mColonPaint.setAntiAlias(antiAlias);
@@ -365,6 +371,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 int alpha = inMuteMode ? MUTE_ALPHA : NORMAL_ALPHA;
                 mDatePaint.setAlpha(alpha);
                 mHourPaint.setAlpha(alpha);
+                mHighTempPaint.setAlpha(alpha);
+                mLowTempPaint.setAlpha(alpha);
                 mMinutePaint.setAlpha(alpha);
                 mColonPaint.setAlpha(alpha);
                 mAmPmPaint.setAlpha(alpha);
@@ -467,6 +475,10 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 canvas.drawText(
                         mDayOfWeekFormat.format(mDate),
                         mXOffset, mYOffset + mLineHeight, mDatePaint);
+
+                canvas.drawText(
+                        "20" + (char) 0x00B0,
+                        mXOffset, mYOffset + (mLineHeight*2), mHighTempPaint);
             }
         }
 
@@ -574,15 +586,19 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
          * @return whether UI has been updated
          */
         private boolean updateUiForKey(String configKey, int color) {
-            if (configKey.equals(DigitalWatchFaceUtil.KEY_BACKGROUND_COLOR)) {
-                setInteractiveBackgroundColor(color);
-            } else if (configKey.equals(DigitalWatchFaceUtil.KEY_HOURS_COLOR)) {
-                setInteractiveHourDigitsColor(color);
-            } else if (configKey.equals(DigitalWatchFaceUtil.KEY_MINUTES_COLOR)) {
-                setInteractiveMinuteDigitsColor(color);
-            } else {
-                Log.w(TAG, "Ignoring unknown config key: " + configKey);
-                return false;
+            switch (configKey) {
+                case DigitalWatchFaceUtil.KEY_BACKGROUND_COLOR:
+                    setInteractiveBackgroundColor(color);
+                    break;
+                case DigitalWatchFaceUtil.KEY_HOURS_COLOR:
+                    setInteractiveHourDigitsColor(color);
+                    break;
+                case DigitalWatchFaceUtil.KEY_MINUTES_COLOR:
+                    setInteractiveMinuteDigitsColor(color);
+                    break;
+                default:
+                    Log.w(TAG, "Ignoring unknown config key: " + configKey);
+                    return false;
             }
             return true;
         }
