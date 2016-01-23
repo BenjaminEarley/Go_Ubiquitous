@@ -134,7 +134,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         Paint mDatePaint;
         Paint mHourPaint;
         Paint mMinutePaint;
-        Paint mSecondPaint;
         Paint mAmPmPaint;
         Paint mColonPaint;
         float mColonWidth;
@@ -189,7 +188,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mDatePaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_date));
             mHourPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mMinutePaint = createTextPaint(mInteractiveMinuteDigitsColor);
-            mSecondPaint = createTextPaint(mInteractiveSecondDigitsColor);
             mAmPmPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_am_pm));
             mColonPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_colons));
 
@@ -290,7 +288,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mDatePaint.setTextSize(resources.getDimension(R.dimen.digital_date_text_size));
             mHourPaint.setTextSize(textSize);
             mMinutePaint.setTextSize(textSize);
-            mSecondPaint.setTextSize(textSize);
             mAmPmPaint.setTextSize(amPmSize);
             mColonPaint.setTextSize(textSize);
 
@@ -333,17 +330,12 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                     DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_HOUR_DIGITS);
             adjustPaintColorToCurrentMode(mMinutePaint, mInteractiveMinuteDigitsColor,
                     DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_MINUTE_DIGITS);
-            // Actually, the seconds are not rendered in the ambient mode, so we could pass just any
-            // value as ambientColor here.
-            adjustPaintColorToCurrentMode(mSecondPaint, mInteractiveSecondDigitsColor,
-                    DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_SECOND_DIGITS);
 
             if (mLowBitAmbient) {
                 boolean antiAlias = !inAmbientMode;
                 mDatePaint.setAntiAlias(antiAlias);
                 mHourPaint.setAntiAlias(antiAlias);
                 mMinutePaint.setAntiAlias(antiAlias);
-                mSecondPaint.setAntiAlias(antiAlias);
                 mAmPmPaint.setAntiAlias(antiAlias);
                 mColonPaint.setAntiAlias(antiAlias);
             }
@@ -415,11 +407,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             updatePaintIfInteractive(mMinutePaint, color);
         }
 
-        private void setInteractiveSecondDigitsColor(int color) {
-            mInteractiveSecondDigitsColor = color;
-            updatePaintIfInteractive(mSecondPaint, color);
-        }
-
         private String formatTwoDigitNumber(int hour) {
             return String.format("%02d", hour);
         }
@@ -469,16 +456,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             canvas.drawText(minuteString, x, mYOffset, mMinutePaint);
             x += mMinutePaint.measureText(minuteString);
 
-            // In unmuted interactive mode, draw a second blinking colon followed by the seconds.
-            // Otherwise, if we're in 12-hour mode, draw AM/PM
-            if (!isInAmbientMode() && !mMute) {
-                if (mShouldDrawColons) {
-                    canvas.drawText(COLON_STRING, x, mYOffset, mColonPaint);
-                }
-                x += mColonWidth;
-                canvas.drawText(formatTwoDigitNumber(
-                        mCalendar.get(Calendar.SECOND)), x, mYOffset, mSecondPaint);
-            } else if (!is24Hour) {
+            if (!is24Hour) {
                 x += mColonWidth;
                 canvas.drawText(getAmPmString(
                         mCalendar.get(Calendar.AM_PM)), x, mYOffset, mAmPmPaint);
@@ -608,8 +586,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 setInteractiveHourDigitsColor(color);
             } else if (configKey.equals(DigitalWatchFaceUtil.KEY_MINUTES_COLOR)) {
                 setInteractiveMinuteDigitsColor(color);
-            } else if (configKey.equals(DigitalWatchFaceUtil.KEY_SECONDS_COLOR)) {
-                setInteractiveSecondDigitsColor(color);
             } else {
                 Log.w(TAG, "Ignoring unknown config key: " + configKey);
                 return false;
