@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -481,6 +482,9 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                     canvas.drawText(
                             "20" + (char) 0x00B0,
                             mXOffset * 4, mYOffset + (mLineHeight * 3), mLowTempPaint);
+
+                    canvas.drawBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
+                            R.drawable.art_clear),(float)(mXOffset * 5.5), mYOffset,null);
                 }
             }
         }
