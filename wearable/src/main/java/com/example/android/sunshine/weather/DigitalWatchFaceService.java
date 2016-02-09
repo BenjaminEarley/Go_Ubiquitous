@@ -179,7 +179,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(mInteractiveBackgroundColor);
             mDatePaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_date));
-            mHighTempPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_high_temp));
+            mHighTempPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mLowTempPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_low_temp));
             mHourPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mMinutePaint = createTextPaint(mInteractiveMinuteDigitsColor);
@@ -285,6 +285,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mMinutePaint.setTextSize(textSize);
             mAmPmPaint.setTextSize(amPmSize);
             mColonPaint.setTextSize(textSize);
+            mHighTempPaint.setTextSize(textSize);
+            mLowTempPaint.setTextSize(amPmSize);
 
             mColonWidth = mColonPaint.measureText(COLON_STRING);
         }
@@ -455,7 +457,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             canvas.drawText(minuteString, x, mYOffset, mMinutePaint);
             x += mMinutePaint.measureText(minuteString);
 
-            if (!is24Hour) {
+            if (!is24Hour && !isInAmbientMode()) {
                 x += mColonWidth;
                 canvas.drawText(getAmPmString(
                         mCalendar.get(Calendar.AM_PM)), x, mYOffset, mAmPmPaint);
@@ -465,13 +467,21 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             // into each other in ambient mode.
             if (getPeekCardPosition().isEmpty()) {
                 // Day of week
-                canvas.drawText(
-                        mDayOfWeekFormat.format(mDate),
-                        mXOffset, mYOffset + mLineHeight, mDatePaint);
+                if (!isInAmbientMode()) {
+                    canvas.drawText(
+                            mDayOfWeekFormat.format(mDate),
+                            mXOffset, mYOffset + mLineHeight, mDatePaint);
+                }
 
                 canvas.drawText(
                         "20" + (char) 0x00B0,
-                        mXOffset, mYOffset + (mLineHeight*2), mHighTempPaint);
+                        mXOffset, mYOffset + (mLineHeight*3), mHighTempPaint);
+
+                if (!isInAmbientMode()) {
+                    canvas.drawText(
+                            "20" + (char) 0x00B0,
+                            mXOffset * 4, mYOffset + (mLineHeight * 3), mLowTempPaint);
+                }
             }
         }
 
