@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,6 +17,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
@@ -43,7 +45,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-public class DigitalWatchFaceService extends CanvasWatchFaceService {
+public class DigitalWatchFaceService extends CanvasWatchFaceService implements SharedPreferences.OnSharedPreferenceChangeListener{
     private static final String TAG = "DigitalWatchFaceService";
 
     private static final Typeface BOLD_TYPEFACE =
@@ -62,9 +64,30 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
      */
     private static final long MUTE_UPDATE_RATE_MS = TimeUnit.MINUTES.toMillis(1);
 
+    private int highTemp;
+
+    private int lowTemp;
+
+    private int weatherId;
+
     @Override
     public Engine onCreateEngine() {
         return new Engine();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        switch (key) {
+            case "HIGH_TEMP":
+                highTemp = sharedPreferences.getInt("HIGH_TEMP", -999);
+                break;
+            case "LOW_TEMP":
+                lowTemp = sharedPreferences.getInt("LOW_TEMP", -999);
+                break;
+            case "WEATHER_ID":
+                weatherId = sharedPreferences.getInt("WEATHER_ID", -999);
+                break;
+        }
     }
 
     private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener,
@@ -127,6 +150,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
          */
         boolean mRegisteredReceiver = false;
 
+        SharedPreferences sp;
+
         Paint mBackgroundPaint;
         Paint mDatePaint;
         Paint mHighTempPaint;
@@ -180,6 +205,12 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mAmString = resources.getString(R.string.digital_am);
             mPmString = resources.getString(R.string.digital_pm);
 
+            sp = PreferenceManager.getDefaultSharedPreferences(DigitalWatchFaceService.this);
+            highTemp = sp.getInt("HIGH_TEMP", -999);
+            lowTemp = sp.getInt("LOW_TEMP", -999);
+            weatherId = sp.getInt("WEATHER_ID", -999);
+            sp.registerOnSharedPreferenceChangeListener(DigitalWatchFaceService.this);
+
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(mInteractiveBackgroundColor);
             mDatePaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_date));
@@ -198,6 +229,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onDestroy() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            sp.unregisterOnSharedPreferenceChangeListener(DigitalWatchFaceService.this);
             super.onDestroy();
         }
 
@@ -477,27 +509,30 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                             mXOffset, mYOffset + mLineHeight, mDatePaint);
                 }
 
-                x = mXOffset;
+                if (highTemp != -999) {
 
-                canvas.drawText(
-                        "20" + (char) 0x00B0,
-                        x, mYOffset + (mLineHeight*3), mHighTempPaint);
+                    x = mXOffset;
 
-                int h = (int) mHighTempPaint.measureText("20" + (char) 0x00B0);
-
-                x += h;
-
-                if (!isInAmbientMode()) {
                     canvas.drawText(
-                            "20" + (char) 0x00B0,
-                            x, mYOffset + (mLineHeight * 3), mLowTempPaint);
+                            Integer.toString(highTemp) + (char) 0x00B0,
+                            x, mYOffset + (mLineHeight * 3), mHighTempPaint);
 
-                    x += mLowTempPaint.measureText("20" + (char) 0x00B0);
+                    int h = (int) mHighTempPaint.measureText(Integer.toString(highTemp) + (char) 0x00B0);
 
-                    Bitmap weatherIcon = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
-                            R.drawable.art_clear),h,h,false);
+                    x += h;
 
-                    canvas.drawBitmap(weatherIcon,x, mYOffset + mLineHeight,null);
+                    if (!isInAmbientMode()) {
+                        canvas.drawText(
+                                Integer.toString(lowTemp) + (char) 0x00B0,
+                                x, mYOffset + (mLineHeight * 3), mLowTempPaint);
+
+                        int edge = (int) mHighTempPaint.measureText("20" + (char) 0x00B0);
+
+                        Bitmap weatherIcon = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
+                                R.drawable.art_clear), edge, edge, false);
+
+                        canvas.drawBitmap(weatherIcon, edge * 2, mYOffset + mLineHeight, null);
+                    }
                 }
             }
         }

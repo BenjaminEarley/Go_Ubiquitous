@@ -34,6 +34,7 @@ import com.example.android.sunshine.app.BuildConfig;
 import com.example.android.sunshine.app.MainActivity;
 import com.example.android.sunshine.app.R;
 import com.example.android.sunshine.app.Utility;
+import com.example.android.sunshine.app.WatchService;
 import com.example.android.sunshine.app.data.WeatherContract;
 import com.example.android.sunshine.app.muzei.WeatherMuzeiSource;
 
@@ -337,6 +338,14 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                 JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
                 high = temperatureObject.getDouble(OWM_MAX);
                 low = temperatureObject.getDouble(OWM_MIN);
+
+                if (i == 0) {
+                    Intent intent = new Intent(getContext(), WatchService.class);
+                    intent.putExtra("HIGH_TEMP", high);
+                    intent.putExtra("LOW_TEMP", low);
+                    intent.putExtra("WEATHER_ID", weatherId);
+                    getContext().startService(intent);
+                }
 
                 ContentValues weatherValues = new ContentValues();
 
