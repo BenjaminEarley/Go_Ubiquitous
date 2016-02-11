@@ -5,10 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -474,17 +477,27 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                             mXOffset, mYOffset + mLineHeight, mDatePaint);
                 }
 
+                x = mXOffset;
+
                 canvas.drawText(
                         "20" + (char) 0x00B0,
-                        mXOffset, mYOffset + (mLineHeight*3), mHighTempPaint);
+                        x, mYOffset + (mLineHeight*3), mHighTempPaint);
+
+                int h = (int) mHighTempPaint.measureText("20" + (char) 0x00B0);
+
+                x += h;
 
                 if (!isInAmbientMode()) {
                     canvas.drawText(
                             "20" + (char) 0x00B0,
-                            mXOffset * 4, mYOffset + (mLineHeight * 3), mLowTempPaint);
+                            x, mYOffset + (mLineHeight * 3), mLowTempPaint);
 
-                    canvas.drawBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
-                            R.drawable.art_clear),(float)(mXOffset * 5.5), mYOffset,null);
+                    x += mLowTempPaint.measureText("20" + (char) 0x00B0);
+
+                    Bitmap weatherIcon = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
+                            R.drawable.art_clear),h,h,false);
+
+                    canvas.drawBitmap(weatherIcon,x, mYOffset + mLineHeight,null);
                 }
             }
         }
