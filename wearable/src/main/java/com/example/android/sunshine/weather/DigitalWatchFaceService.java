@@ -4,14 +4,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
@@ -39,14 +45,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Sample digital watch face with blinking colons and seconds. In ambient mode, the seconds are
- * replaced with an AM/PM indicator and the colons don't blink. On devices with low-bit ambient
- * mode, the text is drawn without anti-aliasing in ambient mode. On devices which require burn-in
- * protection, the hours are drawn in normal rather than bold. The time is drawn with less contrast
- * and without seconds in mute mode.
- */
-public class DigitalWatchFaceService extends CanvasWatchFaceService {
+public class DigitalWatchFaceService extends CanvasWatchFaceService implements SharedPreferences.OnSharedPreferenceChangeListener{
     private static final String TAG = "DigitalWatchFaceService";
 
     private static final Typeface BOLD_TYPEFACE =
@@ -65,9 +64,30 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
      */
     private static final long MUTE_UPDATE_RATE_MS = TimeUnit.MINUTES.toMillis(1);
 
+    private int highTemp;
+
+    private int lowTemp;
+
+    private int weatherId;
+
     @Override
     public Engine onCreateEngine() {
         return new Engine();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        switch (key) {
+            case "HIGH_TEMP":
+                highTemp = sharedPreferences.getInt("HIGH_TEMP", -999);
+                break;
+            case "LOW_TEMP":
+                lowTemp = sharedPreferences.getInt("LOW_TEMP", -999);
+                break;
+            case "WEATHER_ID":
+                weatherId = sharedPreferences.getInt("WEATHER_ID", -999);
+                break;
+        }
     }
 
     private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener,
@@ -130,6 +150,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
          */
         boolean mRegisteredReceiver = false;
 
+        SharedPreferences sp;
+
         Paint mBackgroundPaint;
         Paint mDatePaint;
         Paint mHighTempPaint;
@@ -183,10 +205,16 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mAmString = resources.getString(R.string.digital_am);
             mPmString = resources.getString(R.string.digital_pm);
 
+            sp = PreferenceManager.getDefaultSharedPreferences(DigitalWatchFaceService.this);
+            highTemp = sp.getInt("HIGH_TEMP", -999);
+            lowTemp = sp.getInt("LOW_TEMP", -999);
+            weatherId = sp.getInt("WEATHER_ID", -999);
+            sp.registerOnSharedPreferenceChangeListener(DigitalWatchFaceService.this);
+
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(mInteractiveBackgroundColor);
             mDatePaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_date));
-            mHighTempPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_high_temp));
+            mHighTempPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mLowTempPaint = createTextPaint(ContextCompat.getColor(DigitalWatchFaceService.this,R.color.digital_low_temp));
             mHourPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mMinutePaint = createTextPaint(mInteractiveMinuteDigitsColor);
@@ -201,6 +229,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onDestroy() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            sp.unregisterOnSharedPreferenceChangeListener(DigitalWatchFaceService.this);
             super.onDestroy();
         }
 
@@ -292,6 +321,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mMinutePaint.setTextSize(textSize);
             mAmPmPaint.setTextSize(amPmSize);
             mColonPaint.setTextSize(textSize);
+            mHighTempPaint.setTextSize(textSize);
+            mLowTempPaint.setTextSize(amPmSize);
 
             mColonWidth = mColonPaint.measureText(COLON_STRING);
         }
@@ -462,7 +493,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             canvas.drawText(minuteString, x, mYOffset, mMinutePaint);
             x += mMinutePaint.measureText(minuteString);
 
-            if (!is24Hour) {
+            if (!is24Hour && !isInAmbientMode()) {
                 x += mColonWidth;
                 canvas.drawText(getAmPmString(
                         mCalendar.get(Calendar.AM_PM)), x, mYOffset, mAmPmPaint);
@@ -472,13 +503,37 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             // into each other in ambient mode.
             if (getPeekCardPosition().isEmpty()) {
                 // Day of week
-                canvas.drawText(
-                        mDayOfWeekFormat.format(mDate),
-                        mXOffset, mYOffset + mLineHeight, mDatePaint);
+                if (!isInAmbientMode()) {
+                    canvas.drawText(
+                            mDayOfWeekFormat.format(mDate),
+                            mXOffset, mYOffset + mLineHeight, mDatePaint);
+                }
 
-                canvas.drawText(
-                        "20" + (char) 0x00B0,
-                        mXOffset, mYOffset + (mLineHeight*2), mHighTempPaint);
+                if (highTemp != -999) {
+
+                    x = mXOffset;
+
+                    canvas.drawText(
+                            Integer.toString(highTemp) + (char) 0x00B0,
+                            x, mYOffset + (mLineHeight * 3), mHighTempPaint);
+
+                    int h = (int) mHighTempPaint.measureText(Integer.toString(highTemp) + (char) 0x00B0);
+
+                    x += h;
+
+                    if (!isInAmbientMode()) {
+                        canvas.drawText(
+                                Integer.toString(lowTemp) + (char) 0x00B0,
+                                x, mYOffset + (mLineHeight * 3), mLowTempPaint);
+
+                        int edge = (int) mHighTempPaint.measureText("20" + (char) 0x00B0);
+
+                        Bitmap weatherIcon = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
+                                R.drawable.art_clear), edge, edge, false);
+
+                        canvas.drawBitmap(weatherIcon, edge * 2, mYOffset + mLineHeight, null);
+                    }
+                }
             }
         }
 
