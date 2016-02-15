@@ -1,4 +1,4 @@
-package com.example.android.sunshine.weather.util;
+package com.example.android.sunshine.app.util;
 
 import android.graphics.Color;
 import android.net.Uri;

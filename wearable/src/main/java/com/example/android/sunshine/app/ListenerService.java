@@ -1,4 +1,4 @@
-package com.example.android.sunshine.weather;
+package com.example.android.sunshine.app;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
