@@ -340,6 +340,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                 low = temperatureObject.getDouble(OWM_MIN);
 
                 if (i == 0) {
+                    Log.d("TESTTEST", "Sync will watch service started");
                     Intent intent = new Intent(getContext(), WatchService.class);
                     intent.putExtra("HIGH_TEMP", high);
                     intent.putExtra("LOW_TEMP", low);

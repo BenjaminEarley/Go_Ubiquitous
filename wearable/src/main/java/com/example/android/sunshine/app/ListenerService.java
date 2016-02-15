@@ -17,7 +17,7 @@ public class ListenerService extends WearableListenerService {
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
 
-        Log.d("TESTTEST", "SOMETHING");
+        Log.d("TESTTEST", "Data Changed");
 
 
         for (DataEvent dataEvent : dataEvents) {
