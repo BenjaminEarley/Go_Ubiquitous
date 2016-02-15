@@ -10,7 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        resValue "string", "OPEN_WEATHER_MAP_API_KEY", "d031281fa36abc8355ac6947461209e6"
+        resValue "string", "OPEN_WEATHER_MAP_API_KEY", "Place_Key_Here"
     }
     buildTypes {
         release {
