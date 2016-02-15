@@ -531,7 +531,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService implements S
                         Bitmap weatherIcon = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
                                 DigitalWatchFaceUtil.getArtResourceForWeatherCondition(weatherId)), edge, edge, false);
 
-                        canvas.drawBitmap(weatherIcon, edge * 2, mYOffset + mLineHeight, null);
+                        canvas.drawBitmap(weatherIcon,(int)(edge * 2.2), mYOffset + mLineHeight, null);
                     }
                 }
             }
