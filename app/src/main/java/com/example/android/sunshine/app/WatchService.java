@@ -1,10 +1,13 @@
 package com.example.android.sunshine.app;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -19,8 +22,8 @@ public class WatchService extends Service implements GoogleApiClient.ConnectionC
 
     private final IBinder mBinder = new MyBinder();
 
-    private double highTemp;
-    private double lowTemp;
+    private int highTemp;
+    private int lowTemp;
     private int weatherId;
 
     private GoogleApiClient mGoogleApiClient;
@@ -33,8 +36,8 @@ public class WatchService extends Service implements GoogleApiClient.ConnectionC
 
         Log.d("TESTTEST", "Start Command Started");
 
-        highTemp = intent.getDoubleExtra("HIGH_TEMP", -999);
-        lowTemp = intent.getDoubleExtra("LOW_TEMP", -999);
+        highTemp = intent.getIntExtra("HIGH_TEMP", -999);
+        lowTemp = intent.getIntExtra("LOW_TEMP", -999);
         weatherId = intent.getIntExtra("WEATHER_ID", -999);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -74,14 +77,14 @@ public class WatchService extends Service implements GoogleApiClient.ConnectionC
         stopSelf();
     }
 
-    private void sendWeather(double highTemp, double lowTemp, int weatherId) {
+    private void sendWeather(int highTemp, int lowTemp, int weatherId) {
 
         Log.d("TESTTEST", "Send Weather");
 
         PutDataMapRequest putDataMapRequest = PutDataMapRequest.create("/weather");
 
-        putDataMapRequest.getDataMap().putDouble("HIGH_TEMP", highTemp);
-        putDataMapRequest.getDataMap().putDouble("LOW_TEMP", lowTemp);
+        putDataMapRequest.getDataMap().putInt("HIGH_TEMP", highTemp);
+        putDataMapRequest.getDataMap().putInt("LOW_TEMP", lowTemp);
         putDataMapRequest.getDataMap().putInt("WEATHER_ID", weatherId);
 
         PutDataRequest request = putDataMapRequest.asPutDataRequest();

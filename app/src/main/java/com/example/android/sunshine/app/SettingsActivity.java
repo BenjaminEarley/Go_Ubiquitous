@@ -171,6 +171,19 @@ public class SettingsActivity extends PreferenceActivity
         } else if ( key.equals(getString(R.string.pref_units_key)) ) {
             // units have changed. update lists of weather entries accordingly
             getContentResolver().notifyChange(WeatherContract.WeatherEntry.CONTENT_URI, null);
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+            int high = sp.getInt("HIGH_TEMP", -999);
+            int low = sp.getInt("LOW_TEMP", -999);
+            int weatherId = sp.getInt("WEATHER_ID", -1);
+
+            high = Utility.formatTemperatureToInt(this, high);
+            low = Utility.formatTemperatureToInt(this, low);
+
+            Intent intent = new Intent(this, WatchService.class);
+            intent.putExtra("HIGH_TEMP", high);
+            intent.putExtra("LOW_TEMP", low);
+            intent.putExtra("WEATHER_ID", weatherId);
+            startService(intent);
         } else if ( key.equals(getString(R.string.pref_location_status_key)) ) {
             // our location status has changed.  Update the summary accordingly
             Preference locationPreference = findPreference(getString(R.string.pref_location_key));

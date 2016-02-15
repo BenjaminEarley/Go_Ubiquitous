@@ -25,8 +25,8 @@ public class ListenerService extends WearableListenerService {
                 DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
                 String path = dataEvent.getDataItem().getUri().getPath();
                 if (path.equals("/weather")) {
-                    double high = dataMap.getDouble("HIGH_TEMP");
-                    double low = dataMap.getDouble("LOW_TEMP");
+                    int high = dataMap.getInt("HIGH_TEMP");
+                    int low = dataMap.getInt("LOW_TEMP");
                     int id = dataMap.getInt("WEATHER_ID");
 
                     Log.d("TESTTEST", high + " put out");
@@ -38,12 +38,12 @@ public class ListenerService extends WearableListenerService {
     }
 
     @SuppressLint("CommitPrefEdits")
-    private void saveWeatherValuesInPreferences(double high, double low, int id) {
+    private void saveWeatherValuesInPreferences(int high, int low, int id) {
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor spe = sp.edit();
-        spe.putInt("HIGH_TEMP", (int) Math.round(high));
-        spe.putInt("LOW_TEMP", (int) Math.round(low));
+        spe.putInt("HIGH_TEMP", high);
+        spe.putInt("LOW_TEMP", low);
         spe.putInt("WEATHER_ID", id);
         spe.commit();
 

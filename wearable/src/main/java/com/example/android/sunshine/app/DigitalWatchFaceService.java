@@ -509,7 +509,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService implements S
                             mXOffset, mYOffset + mLineHeight, mDatePaint);
                 }
 
-                if (highTemp != -999) {
+                if (highTemp != -999 && highTemp != -1766.2) {
 
                     x = mXOffset;
 

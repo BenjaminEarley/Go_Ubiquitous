@@ -341,9 +341,20 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
                 if (i == 0) {
                     Log.d("TESTTEST", "Sync will watch service started");
+
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    SharedPreferences.Editor spe = sp.edit();
+                    spe.putInt("HIGH_TEMP", (int) high);
+                    spe.putInt("LOW_TEMP", (int) low);
+                    spe.putInt("WEATHER_ID", weatherId);
+                    spe.apply();
+
+                    int highTemp = Utility.formatTemperatureToInt(getContext(), high);
+                    int lowTemp = Utility.formatTemperatureToInt(getContext(), low);
+
                     Intent intent = new Intent(getContext(), WatchService.class);
-                    intent.putExtra("HIGH_TEMP", high);
-                    intent.putExtra("LOW_TEMP", low);
+                    intent.putExtra("HIGH_TEMP", highTemp);
+                    intent.putExtra("LOW_TEMP", lowTemp);
                     intent.putExtra("WEATHER_ID", weatherId);
                     getContext().startService(intent);
                 }
