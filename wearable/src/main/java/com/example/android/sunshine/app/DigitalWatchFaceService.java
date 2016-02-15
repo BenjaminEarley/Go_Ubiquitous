@@ -529,7 +529,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService implements S
                         int edge = (int) mHighTempPaint.measureText("20" + (char) 0x00B0);
 
                         Bitmap weatherIcon = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(DigitalWatchFaceService.this.getResources(),
-                                R.drawable.art_clear), edge, edge, false);
+                                DigitalWatchFaceUtil.getArtResourceForWeatherCondition(weatherId)), edge, edge, false);
 
                         canvas.drawBitmap(weatherIcon, edge * 2, mYOffset + mLineHeight, null);
                     }
